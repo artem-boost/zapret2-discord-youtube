@@ -1,5 +1,5 @@
 @echo off
-set "LOCAL_VERSION=1.9.3"
+set "LOCAL_VERSION=0.1"
 
 :: External commands
 if "%~1"=="status_zapret" (
@@ -53,7 +53,7 @@ call :check_updates_switch_status
 set "menu_choice=null"
 
 echo.
-echo   ZAPRET SERVICE MANAGER v!LOCAL_VERSION!
+echo   zapret2 SERVICE MANAGER v!LOCAL_VERSION!
 echo   ----------------------------------------
 echo.
 echo   :: SERVICE
@@ -79,7 +79,7 @@ echo   ----------------------------------------
 echo      0. Exit
 echo.
 
-set /p menu_choice=   Select option (0-11): 
+set /p menu_choice=   Select option (0-11):
 
 if "%menu_choice%"=="1" goto service_install
 if "%menu_choice%"=="2" goto service_remove
@@ -107,9 +107,9 @@ exit /b
 cls
 chcp 437 > nul
 
-sc query "zapret" >nul 2>&1
+sc query "zapret2" >nul 2>&1
 if !errorlevel!==0 (
-    for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret" /v zapret-discord-youtube 2^>nul') do echo Service strategy installed from "%%B"
+    for /f "tokens=2*" %%A in ('reg query "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret-discord-youtube 2^>nul') do echo Service strategy installed from "%%B"
 )
 
 call :test_service zapret
@@ -121,11 +121,11 @@ if not exist "%BIN_PATH%\*.sys" (
 )
 echo:
 
-tasklist /FI "IMAGENAME eq winws.exe" | find /I "winws.exe" > nul
+tasklist /FI "IMAGENAME eq winws2.exe" | find /I "winws2.exe" > nul
 if !errorlevel!==0 (
-    call :PrintGreen "Bypass (winws.exe) is RUNNING."
+    call :PrintGreen "Bypass (winws2.exe) is RUNNING."
 ) else (
-    call :PrintRed "Bypass (winws.exe) is NOT running."
+    call :PrintRed "Bypass (winws2.exe) is NOT running."
 )
 
 pause
@@ -160,7 +160,7 @@ exit /b
 cls
 chcp 65001 > nul
 
-set SRVCNAME=zapret
+set SRVCNAME=zapret2
 sc query "!SRVCNAME!" >nul 2>&1
 if !errorlevel!==0 (
     net stop %SRVCNAME%
@@ -169,9 +169,9 @@ if !errorlevel!==0 (
     echo Service "%SRVCNAME%" is not installed.
 )
 
-tasklist /FI "IMAGENAME eq winws.exe" | find /I "winws.exe" > nul
+tasklist /FI "IMAGENAME eq winws2.exe" | find /I "winws2.exe" > nul
 if !errorlevel!==0 (
-    taskkill /IM winws.exe /F > nul
+    taskkill /IM winws2.exe /F > nul
 )
 
 sc query "WinDivert" >nul 2>&1
@@ -238,14 +238,14 @@ for /f "tokens=*" %%a in ('type "!selectedFile!"') do (
     set "line=%%a"
     call set "line=%%line:^!=EXCL_MARK%%"
 
-    echo !line! | findstr /i "%BIN%winws.exe" >nul
+    echo !line! | findstr /i "%BIN%winws2.exe" >nul
     if not errorlevel 1 (
         set "capture=1"
     )
 
     if !capture!==1 (
         if not defined args (
-            set "line=!line:*%BIN%winws.exe"=!"
+            set "line=!line:*%BIN%winws2.exe"=!"
         )
 
         set "temp_args="
@@ -311,17 +311,17 @@ call :tcp_enable
 set ARGS=%args%
 call set "ARGS=%%ARGS:EXCL_MARK=^!%%"
 echo Final args: !ARGS!
-set SRVCNAME=zapret
+set SRVCNAME=zapret2
 
 net stop %SRVCNAME% >nul 2>&1
 sc delete %SRVCNAME% >nul 2>&1
-sc create %SRVCNAME% binPath= "\"%BIN_PATH%winws.exe\" !ARGS!" DisplayName= "zapret" start= auto
+sc create %SRVCNAME% binPath= "\"%BIN_PATH%winws2.exe\" !ARGS!" DisplayName= "zapret2" start= auto
 sc description %SRVCNAME% "Zapret DPI bypass software"
 sc start %SRVCNAME%
 for %%F in ("!file%choice%!") do (
     set "filename=%%~nF"
 )
-reg add "HKLM\System\CurrentControlSet\Services\zapret" /v zapret-discord-youtube /t REG_SZ /d "!filename!" /f
+reg add "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret-discord-youtube /t REG_SZ /d "!filename!" /f
 
 pause
 goto menu
@@ -344,18 +344,18 @@ for /f "delims=" %%A in ('powershell -NoProfile -Command "(Invoke-WebRequest -Ur
 if not defined GITHUB_VERSION (
     echo Warning: failed to fetch the latest version. This warning does not affect the operation of zapret
     timeout /T 9
-    if "%1"=="soft" exit 
+    if "%1"=="soft" exit
     goto menu
 )
 
 :: Version comparison
 if "%LOCAL_VERSION%"=="%GITHUB_VERSION%" (
     echo Latest version installed: %LOCAL_VERSION%
-    
-    if "%1"=="soft" exit 
+
+    if "%1"=="soft" exit
     pause
     goto menu
-) 
+)
 
 echo New version available: %GITHUB_VERSION%
 echo Release page: %GITHUB_RELEASE_URL%%GITHUB_VERSION%
@@ -371,7 +371,7 @@ if /i "%CHOICE%"=="Y" (
 )
 
 
-if "%1"=="soft" exit 
+if "%1"=="soft" exit
 pause
 goto menu
 
@@ -403,7 +403,7 @@ if !proxyEnabled!==1 (
     for /f "tokens=2*" %%A in ('reg query "HKCU\Software\Microsoft\Windows\CurrentVersion\Internet Settings" /v ProxyServer 2^>nul ^| findstr /i "ProxyServer"') do (
         set "proxyServer=%%B"
     )
-    
+
     call :PrintYellow "[?] System proxy is enabled: !proxyServer!"
     call :PrintYellow "Make sure it's valid or disable it if you don't use a proxy"
 ) else (
@@ -527,24 +527,24 @@ if !dohfound!==0 (
 echo:
 
 :: WinDivert conflict
-tasklist /FI "IMAGENAME eq winws.exe" | find /I "winws.exe" > nul
+tasklist /FI "IMAGENAME eq winws2.exe" | find /I "winws2.exe" > nul
 set "winws_running=!errorlevel!"
 
 sc query "WinDivert" | findstr /I "RUNNING STOP_PENDING" > nul
 set "windivert_running=!errorlevel!"
 
 if !winws_running! neq 0 if !windivert_running!==0 (
-    call :PrintYellow "[?] winws.exe is not running but WinDivert service is active. Attempting to delete WinDivert..."
-    
+    call :PrintYellow "[?] winws2.exe is not running but WinDivert service is active. Attempting to delete WinDivert..."
+
     net stop "WinDivert" >nul 2>&1
     sc delete "WinDivert" >nul 2>&1
     sc query "WinDivert" >nul 2>&1
     if !errorlevel!==0 (
         call :PrintRed "[X] Failed to delete WinDivert. Checking for conflicting services..."
-        
+
         set "conflicting_services=GoodbyeDPI"
         set "found_conflict=0"
-        
+
         for %%s in (!conflicting_services!) do (
             sc query "%%s" >nul 2>&1
             if !errorlevel!==0 (
@@ -559,7 +559,7 @@ if !winws_running! neq 0 if !windivert_running!==0 (
                 set "found_conflict=1"
             )
         )
-        
+
         if !found_conflict!==0 (
             call :PrintRed "[X] No conflicting services found. Check manually if any other bypass is using WinDivert."
         ) else (
@@ -577,7 +577,7 @@ if !winws_running! neq 0 if !windivert_running!==0 (
     ) else (
         call :PrintGreen "WinDivert successfully removed"
     )
-    
+
     echo:
 )
 
@@ -600,12 +600,12 @@ for %%s in (!conflicting_services!) do (
 
 if !found_any_conflict!==1 (
     call :PrintRed "[X] Conflicting bypass services found: !found_conflicts!"
-    
+
     set "CHOICE="
     set /p "CHOICE=Do you want to remove these conflicting services? (Y/N) (default: N) "
     if "!CHOICE!"=="" set "CHOICE=N"
     if "!CHOICE!"=="y" set "CHOICE=Y"
-    
+
     if /i "!CHOICE!"=="Y" (
         for %%s in (!found_conflicts!) do (
             call :PrintYellow "Stopping and removing service: %%s"
@@ -623,7 +623,7 @@ if !found_any_conflict!==1 (
         net stop "WinDivert14" >nul 2>&1
         sc delete "WinDivert14" >nul 2>&1
     )
-    
+
     echo:
 )
 
@@ -760,28 +760,28 @@ set "backupFile=%listFile%.backup"
 
 if "%IPsetStatus%"=="loaded" (
     echo Switching to none mode...
-    
+
     if not exist "%backupFile%" (
         ren "%listFile%" "ipset-all.txt.backup"
     ) else (
         del /f /q "%backupFile%"
         ren "%listFile%" "ipset-all.txt.backup"
     )
-    
+
     >"%listFile%" (
         echo 203.0.113.113/32
     )
-    
+
 ) else if "%IPsetStatus%"=="none" (
     echo Switching to any mode...
-    
+
     >"%listFile%" (
         rem Creating empty file
     )
-    
+
 ) else if "%IPsetStatus%"=="any" (
     echo Switching to loaded mode...
-    
+
     if exist "%backupFile%" (
         del /f /q "%listFile%"
         ren "%backupFile%" "ipset-all.txt"
@@ -790,7 +790,7 @@ if "%IPsetStatus%"=="loaded" (
         pause
         goto menu
     )
-    
+
 )
 
 pause
@@ -879,7 +879,7 @@ if "%needsUpdate%"=="1" (
     echo:
     call :PrintYellow "Hosts file needs to be updated"
     call :PrintYellow "Please manually copy the content from the downloaded file to your hosts file"
-    
+
     start notepad "%tempFile%"
     explorer /select,"%hostsFile%"
 ) else (
