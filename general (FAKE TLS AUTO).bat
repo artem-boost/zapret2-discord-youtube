@@ -13,7 +13,7 @@ set "LISTS=%~dp0lists\"
 set "LUA=%~dp0files\lua\"
 cd /d %BIN%
 
-start "zapret: %~n0" /min "%BIN%winws2.exe" --lua-init=@%LUA%zapret-lib.lua --lua-init=@%LUA%zapret-antidpi.lua ^
+start "zapret2: %~n0" /min "%BIN%winws2.exe" --lua-init=@%LUA%zapret-lib.lua --lua-init=@%LUA%zapret-antidpi.lua ^
 --blob=quic_initial_www_google_com:@%BIN%quic_initial_www_google_com.bin ^
 --wf-tcp-out=80,443,2053,2083,2087,2096,8443,%GameFilter% --wf-udp-out=443,19294-19344,50000-50100,%GameFilter% ^
 --filter-udp=443 --hostlist="%LISTS%list-general.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=fake:blob=quic_initial_www_google_com:repeats=11 --new ^

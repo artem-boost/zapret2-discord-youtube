@@ -13,7 +13,7 @@ set "LISTS=%~dp0lists\"
 set "LUA=%~dp0files\lua\"
 cd /d %BIN%
 
-start "zapret: %~n0" /min "%BIN%winws2.exe" --lua-init=@%LUA%zapret-lib.lua --lua-init=@%LUA%zapret-antidpi.lua ^
+start "zapret2: %~n0" /min "%BIN%winws2.exe" --lua-init=@%LUA%zapret-lib.lua --lua-init=@%LUA%zapret-antidpi.lua ^
 --blob=quic_initial_www_google_com:@%BIN%quic_initial_www_google_com.bin ^
 --blob=tls_clienthello_www_google_com:@%BIN%tls_clienthello_www_google_com.bin ^
 --blob=tls_clienthello_4pda_to:@%BIN%tls_clienthello_4pda_to.bin ^
