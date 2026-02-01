@@ -513,30 +513,30 @@ if (-not $batFiles -or $batFiles.Count -eq 0) {
     exit 1
 }
 
-# Stop winws
+# Stop winws2
 function Stop-Zapret {
-    Get-Process -Name "winws" -ErrorAction SilentlyContinue | Stop-Process -Force
+    Get-Process -Name "winws2" -ErrorAction SilentlyContinue | Stop-Process -Force
 }
 
-# Capture/restore running winws instances to return user ipset/config
-function Get-WinwsSnapshot {
+# Capture/restore running winws2 instances to return user ipset/config
+function Get-Winws2Snapshot {
     try {
-        return Get-CimInstance Win32_Process -Filter "Name='winws.exe'" |
+        return Get-CimInstance Win32_Process -Filter "Name='winws2.exe'" |
             Select-Object ProcessId, CommandLine, ExecutablePath
     } catch {
         return @()
     }
 }
 
-function Restore-WinwsSnapshot {
+function Restore-Winws2Snapshot {
     param($snapshot)
 
     if (-not $snapshot -or $snapshot.Count -eq 0) { return }
 
     $current = @()
-    try { $current = (Get-WinwsSnapshot).CommandLine } catch { $current = @() }
+    try { $current = (Get-Winws2Snapshot).CommandLine } catch { $current = @() }
 
-    Write-Host "[INFO] Restoring previously running winws instances..." -ForegroundColor DarkGray
+    Write-Host "[INFO] Restoring previously running winws2 instances..." -ForegroundColor DarkGray
     foreach ($p in $snapshot) {
         if (-not $p.ExecutablePath) { continue }
 
@@ -558,7 +558,7 @@ function Restore-WinwsSnapshot {
     }
 }
 
-$originalWinws = Get-WinwsSnapshot
+$originalWinws2 = Get-Winws2Snapshot
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
@@ -878,7 +878,7 @@ try {
     Remove-Item -Path $ipsetFlagFile -ErrorAction SilentlyContinue
 } finally {
     Stop-Zapret
-    Restore-WinwsSnapshot -snapshot $originalWinws
+    Restore-Winws2Snapshot -snapshot $originalWinws2
     if ($originalIpsetStatus -ne "any") {
         Write-Host "[INFO] Restoring original ipset mode..." -ForegroundColor DarkGray
         Set-IpsetMode -mode "restore"
