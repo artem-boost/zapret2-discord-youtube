@@ -20,8 +20,8 @@ start "zapret: %~n0" /min "%BIN%winws2.exe" --lua-init=@%LUA%zapret-lib.lua --lu
 --filter-udp=443 --hostlist="%LISTS%list-general.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=fake:blob=quic_initial_www_google_com:repeats=6 --new ^
 --filter-udp=19294-19344,50000-50100 --filter-l7=discord,stun --lua-desync=fake:blob=quic_initial_www_google_com:repeats=6 --new ^
 --filter-tcp=2053,2083,2087,2096,8443 --hostlist-domains=discord.media --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com:ts --new ^
---filter-tcp=443 --hostlist="%LISTS%list-google.txt" --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com:ip_id=zero:ts --new ^
+--filter-tcp=443 --hostlist="%LISTS%list-google.txt" --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com --new ^
 --filter-tcp=80,443 --hostlist="%LISTS%list-general.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com:ts --new ^
 --filter-udp=443 --ipset="%LISTS%ipset-all.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=fake:blob=quic_initial_www_google_com:repeats=6 --new ^
---filter-tcp=80,443,%GameFilter% --ipset="%LISTS%ipset-all.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com:ts --new ^
+--filter-tcp=80,443,%GameFilter% --ipset="%LISTS%ipset-all.txt" --hostlist-exclude="%LISTS%list-exclude.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=multisplit:pos=1:seqovl=681:seqovl_pattern=tls_clienthello_www_google_com --new ^
 --filter-udp=%GameFilter% --ipset="%LISTS%ipset-all.txt" --ipset-exclude="%LISTS%ipset-exclude.txt" --lua-desync=fake:autottl=2:repeats=12:any_protocol=1:fake_unknown_udp=quic_initial_www_google_com:cutoff=n3
