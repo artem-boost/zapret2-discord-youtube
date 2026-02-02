@@ -199,6 +199,7 @@ chcp 65001 > nul
 cd /d "%~dp0"
 set "BIN_PATH=%~dp0bin\"
 set "LISTS_PATH=%~dp0lists\"
+set "LUA_PATH=%~dp0files\lua\"
 
 :: Searching for .bat files in current folder, except files that start with "service"
 echo Pick one of the options:
@@ -225,153 +226,99 @@ if not defined selectedFile (
     goto menu
 )
 
-:: Args that should be followed by value
-set "args_with_value=sni host altorder"
-
-:: Parsing args (mergeargs: 2=start param|3=arg with value|1=params args|0=default)
+:: Parsing args - Extract entire command line after winws2.exe
 set "args="
 set "capture=0"
-set "mergeargs=0"
-set QUOTE="
+set "full_line="
 
-for /f "tokens=*" %%a in ('type "!selectedFile!"') do (
+for /f "usebackq tokens=*" %%a in ("!selectedFile!") do (
     set "line=%%a"
-    call set "line=%%line:^!=EXCL_MARK%%"
-
-    echo !line! | findstr /i "%BIN%winws2.exe" >nul
+    
+    echo !line! | findstr /i "winws2.exe" >nul
     if not errorlevel 1 (
         set "capture=1"
+        set "line=!line:*winws2.exe=!"
     )
-
+    
     if !capture!==1 (
-        if not defined args (
-            set "line=!line:*%BIN%winws2.exe"=!"
-        )
-
-        set "temp_args="
-        for %%i in (!line!) do (
-            set "arg=%%i"
-
-            if not "!arg!"=="^" (
-                if "!arg:~0,2!" EQU "--" if not !mergeargs!==0 (
-                    set "mergeargs=0"
-                )
-
-                if "!arg:~0,1!" EQU "!QUOTE!" (
-                    set "arg=!arg:~1,-1!"
-
-                    echo !arg! | findstr ":" >nul
-                    if !errorlevel!==0 (
-                        set "arg=\!QUOTE!!arg!\!QUOTE!"
-                    ) else if "!arg:~0,1!"=="@" (
-                        set "arg=\!QUOTE!@%~dp0!arg:~1!\!QUOTE!"
-                    ) else if "!arg:~0,5!"=="%%BIN%%" (
-                        set "arg=\!QUOTE!!BIN_PATH!!arg:~5!\!QUOTE!"
-                    ) else if "!arg:~0,7!"=="%%LISTS%%" (
-                        set "arg=\!QUOTE!!LISTS_PATH!!arg:~7!\!QUOTE!"
-                    ) else (
-                        set "arg=\!QUOTE!%~dp0!arg!\!QUOTE!"
-                    )
-                ) else if "!arg:~0,12!" EQU "%%GameFilter%%" (
-                    set "arg=%GameFilter%"
-                )
-
-                if !mergeargs!==1 (
-                    set "temp_args=!temp_args!,!arg!"
-                ) else if !mergeargs!==3 (
-                    set "temp_args=!temp_args!=!arg!"
-                    set "mergeargs=1"
-                ) else (
-                    set "temp_args=!temp_args! !arg!"
-                )
-
-                if "!arg:~0,2!" EQU "--" (
-                    set "mergeargs=2"
-                ) else if !mergeargs! GEQ 1 (
-                    if !mergeargs!==2 set "mergeargs=1"
-
-                    for %%x in (!args_with_value!) do (
-                        if /i "%%x"=="!arg!" (
-                            set "mergeargs=3"
-                        )
-                    )
-                )
+        rem Remove continuation character and spaces around it
+        set "line=!line: ^=!"
+        set "line=!line:^=!"
+        
+        if not "!line!"=="" (
+            if defined full_line (
+                set "full_line=!full_line! !line!"
+            ) else (
+                set "full_line=!line!"
             )
         )
-
-        if not "!temp_args!"=="" (
-            set "args=!args! !temp_args!"
-        )
     )
+)
+
+:: Trim leading spaces manually
+:trim_start
+if "!full_line:~0,1!"==" " (
+    set "full_line=!full_line:~1!"
+    goto trim_start
+)
+
+:: Remove leading quote if present - using substring replacement instead of IF
+set "first_char=!full_line:~0,1!"
+if !first_char!==^" set "full_line=!full_line:~1!"
+
+:: Replace quoted paths like "%LISTS%..." -> \"path...\"
+set "full_line=!full_line:"%%LISTS%%=\"%LISTS_PATH%!"
+set "full_line=!full_line:"%%BIN%%=\"%BIN_PATH%!"
+
+:: Replace @ paths - @%VAR% -> @\"path
+set "full_line=!full_line:@%%BIN%%=@\"%BIN_PATH%!"
+set "full_line=!full_line:@%%LISTS%%=@\"%LISTS_PATH%!"
+set "full_line=!full_line:@%%LUA%%=@\"%LUA_PATH%!"
+
+:: Add closing quotes after file extensions
+set "full_line=!full_line:.bin =.bin\" !"
+set "full_line=!full_line:.lua =.lua\" !"
+set "full_line=!full_line:.txt" =.txt\" !"
+set "full_line=!full_line:.bin" =.bin\" !"
+
+:: Replace GameFilter
+set "full_line=!full_line:%%GameFilter%%=%GameFilter%!"
+
+:: Clean up multiple spaces
+:clean_spaces
+set "full_line_temp=!full_line:  = !"
+if not "!full_line_temp!"=="!full_line!" (
+    set "full_line=!full_line_temp!"
+    goto clean_spaces
 )
 
 :: Creating service with parsed args
 call :tcp_enable
 
-set ARGS=%args%
-call set "ARGS=%%ARGS:EXCL_MARK=^!%%"
-echo Final args: !ARGS!
+echo.
+echo Final args: !full_line!
+echo.
+
 set SRVCNAME=zapret2
 
 net stop %SRVCNAME% >nul 2>&1
 sc delete %SRVCNAME% >nul 2>&1
-sc create %SRVCNAME% binPath= "\"%BIN_PATH%winws2.exe\" !ARGS!" DisplayName= "zapret2" start= auto
-sc description %SRVCNAME% "Zapret DPI bypass software"
-sc start %SRVCNAME%
-for %%F in ("!file%choice%!") do (
-    set "filename=%%~nF"
-)
-reg add "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret-discord-youtube /t REG_SZ /d "!filename!" /f
 
-pause
-goto menu
+sc create %SRVCNAME% binPath= "\"%BIN_PATH%winws2.exe\" !full_line!" DisplayName= "zapret2" start= auto
 
-
-:: CHECK UPDATES =======================
-:service_check_updates
-chcp 437 > nul
-cls
-
-:: Set current version and URLs
-set "GITHUB_VERSION_URL=https://raw.githubusercontent.com/Flowseal/zapret-discord-youtube/main/.service/version.txt"
-set "GITHUB_RELEASE_URL=https://github.com/Flowseal/zapret-discord-youtube/releases/tag/"
-set "GITHUB_DOWNLOAD_URL=https://github.com/Flowseal/zapret-discord-youtube/releases/latest/download/zapret-discord-youtube-"
-
-:: Get the latest version from GitHub
-for /f "delims=" %%A in ('powershell -NoProfile -Command "(Invoke-WebRequest -Uri \"%GITHUB_VERSION_URL%\" -Headers @{\"Cache-Control\"=\"no-cache\"} -UseBasicParsing -TimeoutSec 5).Content.Trim()" 2^>nul') do set "GITHUB_VERSION=%%A"
-
-:: Error handling
-if not defined GITHUB_VERSION (
-    echo Warning: failed to fetch the latest version. This warning does not affect the operation of zapret
-    timeout /T 9
-    if "%1"=="soft" exit
-    goto menu
+if !errorlevel! equ 0 (
+    echo Service created successfully!
+    sc description %SRVCNAME% "Zapret DPI bypass software"
+    sc start %SRVCNAME%
+    
+    for %%F in ("!selectedFile!") do (
+        set "filename=%%~nF"
+    )
+    reg add "HKLM\System\CurrentControlSet\Services\zapret2" /v zapret-discord-youtube /t REG_SZ /d "!filename!" /f
+) else (
+    echo Error creating service! Error code: !errorlevel!
 )
 
-:: Version comparison
-if "%LOCAL_VERSION%"=="%GITHUB_VERSION%" (
-    echo Latest version installed: %LOCAL_VERSION%
-
-    if "%1"=="soft" exit
-    pause
-    goto menu
-)
-
-echo New version available: %GITHUB_VERSION%
-echo Release page: %GITHUB_RELEASE_URL%%GITHUB_VERSION%
-
-set "CHOICE="
-set /p "CHOICE=Do you want to automatically download the new version? (Y/N) (default: Y) "
-if "%CHOICE%"=="" set "CHOICE=Y"
-if /i "%CHOICE%"=="y" set "CHOICE=Y"
-
-if /i "%CHOICE%"=="Y" (
-    echo Opening the download page...
-    start "" "%GITHUB_DOWNLOAD_URL%%GITHUB_VERSION%.rar"
-)
-
-
-if "%1"=="soft" exit
 pause
 goto menu
 
